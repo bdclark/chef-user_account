@@ -47,7 +47,7 @@ sudo            | whether to enable user sudo in /etc/sudoers.d | `false`
 
 If the `gid` attribute is set, the LWRP will create the group if it doesn't
 already exist (otherwise the underlying Chef user resource would fail). If `gid`
-is **numeric**, the new group will be named after the user. If `gid` is a string,
+is numeric, the new group will be named after the user. If `gid` is a string,
 the new group name will be the value of `gid`.
 
 User-specific sudo rights can be given by setting the `sudo` attribute to `true`.
