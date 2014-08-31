@@ -6,4 +6,4 @@ description      'Manages user accounts'
 long_description 'Manages user accounts'
 version          '0.1.0'
 
-depends 'sudo'
+depends 'sudo', '>= 2.7'
