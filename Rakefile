@@ -21,6 +21,9 @@ RSpec::Core::RakeTask.new(:spec) do |t|
   t.rspec_opts = '--format documentation --color'
 end
 
+desc 'Run all style checks and unit tests'
+task default: %w(style spec)
+
 # Integration tests. Kitchen.ci
 namespace :integration do
   desc 'Run Test Kitchen with Vagrant'

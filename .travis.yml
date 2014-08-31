@@ -1,0 +1,6 @@
+language: ruby
+
+rvm:
+  - 2.1
+
+bundler_args: --without kitchen kitchen_cloud kitchen_vagrant
