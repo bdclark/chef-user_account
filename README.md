@@ -1,26 +1,51 @@
-# user_account cookbook
+# <a name='title'></a> Chef user_account Cookbook
+
+[![Build Status](https://travis-ci.org/bdclark/chef-user_account.svg)](https://travis-ci.org/bdclark/chef-user_account)
+
 **THIS COOKBOOK IS CURRENTLY UNDER CONSTRUCTION!**
 
-The `user_account` cookbook is "yet another user cookbook" that configures
-user accounts, including SSH authorized_keys, user sudo privileges, etc.
+## <a name='description'></a> Description
+The `user_account` cookbook configures user accounts, SSH authorized_keys,
+user sudo privileges, etc.
 
-Currently, this cookbook does not manage groups, create users from data bags,
-etc. and (currently) has no recipes. Additional functionality is being considered;
-in the meantime that's what wrapper cookbooks are for (example forthcoming).
+Currently, it doesn't manage groups, it doesn't create users from data bags,
+etc. and (currently) has zero functional recipes. Additional functionality is
+being considered; in the meantime that's what wrapper cookbooks are for (example forthcoming).
 
 The LWRP in this cookbook was heavily inspired by the [user](https://github.com/fnichol/chef-user)
 cookbook by @fnichol and the Opscode [users](https://github.com/sethvargo-cookbooks/users) cookbook
 currently maintained by @sethvargo.
 
-## Dependencies
+## <a name='requirements'></a>  Requirements
+
+### <a name="requirements-chef"></a> Chef
+
+Tested on 11.X, but should be pretty compatible (nothing fancy here).
+
+### <a name="requirements-platform"></a> Platform
+
+The following platforms have been tested with this cookbook, however it will likely
+support more:
+
+* ubuntu
+* centos
+* amazon
+
+### <a name="requirements-cookbooks"></a> Cookbooks
+
 + [sudo cookbook](https://github.com/opscode-cookbooks/sudo) (for setting user-specific
   sudo privileges)
 
-## user_account LWRP
+## <a name='recipes'></a> Recipes
+### <a name='recipe-default'></a> default
+This recipe is a no-op and does nothing (and never will).
+
+## <a name='lwrps'></a> LWRPs
+### <a name='lwrp-ua'></a> user_account
 The `user_account` LWRP is an opinionated extension of the Chef user
 resource with some added functionality and a few differences.
 
-### Actions
+### <a name='lwrp-ua-actions'></a> Actions
 
 Action    | Description
 ----------|---------------------------------------------
@@ -31,7 +56,7 @@ Action    | Description
 `:unlock` | unlock user account
 `:manage` | manage user account
 
-### Attributes
+### <a name='lwrp-ua-attributes'></a> Attributes
 
 Attribute       | Description                                   | Default
 ----------------|-----------------------------------------------|--------
@@ -46,6 +71,7 @@ authorized_keys | string or array of public SSH keys            | `nil`
 cookbook        | source of template for authorized_keys file   | `user_account`
 sudo            | whether to enable user sudo in /etc/sudoers.d | `false`
 
+### <a name='lwrp-ua-description'></a> Description
 If the `gid` attribute is set, the LWRP will create the group if it doesn't
 already exist (otherwise the underlying Chef user resource would fail). If `gid`
 is numeric, the new group will be named after the user. If `gid` is a string,
@@ -67,7 +93,7 @@ log a warning).
 + Does not (currently) expose the `system` or `non-unique` attributes of the
 Chef user resource.
 
-### Examples
+### <a name='lwrp-ua-examples'></a> Examples
 ```ruby
 # create user w/ no password and managed home dir
 user_account 'bbaggins'
@@ -89,7 +115,7 @@ user_account 'sauron' do
   gid 666
 end
 ```
-### Misc. Considerations
+### <a name='lwrp-ua-notes'></a> Notes
 + The `:lock` action alone in this LWRP and the Chef user resource does not
 necessarily block a user's access if passwordless SSH is enabled on the node.
 Depending on the system, it only locks the password. To ensure access is blocked,
@@ -97,7 +123,7 @@ either `:remove` the user, or at least `:lock` the user and unset `authorized_ke
 + The LWRP does not handle password encryption for the `password` attribute.
 There are multiple solutions/tools available to generate valid encrypted passwords.
 
-## License and Author
+## <a name='license'></a> License and Author
 - Author:: Brian Clark <brian@clark.zone> ([bdclark](https://github.com/bdclark))
 
 ```text
