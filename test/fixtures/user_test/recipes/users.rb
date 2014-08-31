@@ -41,14 +41,3 @@ user_account 'gollum' do
   action :lock
   authorized_keys 'asdf'
 end
-
-user_account 'locked_user' do
-  password '$1$xz0FtiKR$cW9e22mUbM4Hg23q5pjFd/'
-end
-
-user_account 'locked_user' do
-  sudo true
-  authorized_keys 'mykey'
-  shell '/bin/false'
-  action :lock
-end
