@@ -1,4 +1,5 @@
 # user_account cookbook
+**THIS COOKBOOK IS CURRENTLY UNDER CONSTRUCTION!**
 
 The `user_account` cookbook is "yet another user cookbook" that configures
 user accounts, including SSH authorized_keys, user sudo privileges, etc.
