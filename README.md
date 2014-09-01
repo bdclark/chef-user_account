@@ -67,7 +67,8 @@ gid             | gid passed to chef user resource (see below)  | `nil`
 home            | home directory passed to chef user resource   | `nil`
 shell           | shell passed to chef user resource            | `nil`
 password        | password passed to chef user resource         | `nil`
-authorized_keys | string or array of public SSH keys            | `nil`
+authorized_keys | string/array of public SSH keys, and/or data bag item(s) to lookup | `nil`
+authorized_keys_bag | optional data bag name holding public SSH keys                 | `nil`
 cookbook        | source of template for authorized_keys file   | `user_account`
 sudo            | whether to enable user sudo in /etc/sudoers.d | `false`
 
@@ -77,51 +78,85 @@ already exist (otherwise the underlying Chef user resource would fail). If `gid`
 is numeric, the new group will be named after the user. If `gid` is a string,
 the new group name will be the value of `gid`.
 
-User-specific sudo rights can be given by setting the `sudo` attribute to `true`.
+User-specific sudo rights can be given by setting `sudo` to `true`.
 This attribute requires the node's sudo config to have `#includedir` set properly.
 See the [sudo cookbook](https://github.com/opscode-cookbooks/sudo) for details.
 
-SSH authorized_key(s) can be set by passing a string or array to the `authorized_keys`
-attribute.
+SSH authorized_key(s) can be set by passing a string or array to `authorized_keys`.
+Only valid keys will be added. If an invalid key is provided, it will
+assume the value is a data bag item and attempt to retrieve public key(s) from
+the data bag specified in `authorized_key_bag`. `authorized_keys` can be populated
+with multiple public keys as well multiple data bag items. If a data bag is used,
+it must at least contain `id` and `authorized_keys` keys. For example:
 
-**Other Differences from Chef user resource**
-+ Always sets `:manage_home` to `true` unless `/dev/null` is specifically set
-as the user's home directory.
-+ Does not raise an exception if user does not already exist when using the
-`:modify`, `:lock`, `:unlock`, or `:manage` actions (however it does
-log a warning).
-+ Does not (currently) expose the `system` or `non-unique` attributes of the
-Chef user resource.
+```json
+{
+  "id": "username",
+  "authorized_keys": "ssh-rsa    AAAA..."
+}
+```
+```json
+{
+  "id": "username",
+  "authorized_keys": [
+    "ssh-rsa    AAAA...",
+    "ssh-ed25519 AAAA..."
+  ]
+}
+```
+Public SSH keys specified with `authorized_keys` will be created in
+`~/.ssh/authorized_keys`. Please note this LWRP always sets `:manage_home` to
+`true` in the underlying Chef user resource unless `home` is set to to `/dev/null`.
+If set as such, it will not attempt to manage any keys in `authorized_keys`.
 
-### <a name='lwrp-ua-examples'></a> Examples
+### <a name='lwrp-ua-examples'></a> Usage and Examples
+Using defaults, create user w/ no password and managed home directory
 ```ruby
-# create user w/ no password and managed home dir
 user_account 'bbaggins'
-
-# create user with some custom stuff
-# and a default group called 'hobbits'
+```
+Create user with specific attributes. User's primary group is `hobbits`, and will
+be created if not already present. User will have sudo rights via an entry
+in `/etc/sudoers.d` and two public SSH keys in `/home/shire/.ssh/authorized_keys`.
+```ruby
 user_account 'sgamgee' do
   comment 'Samwise Gamgee'
   gid 'hobbits'
   home '/home/shire'
-  authorized_keys ['ssh-rsa onekey', 'ssh-rsa anotherkey']
+  authorized_keys ['ssh-rsa    AAAA...', 'ssh-rsa    AAAA...']
   sudo true
   action :create
 end
-
-# create a user with custom gid
-# if group doesn't exist it will be named after user
+```
+Create user with primary group id `666`. If group not already present, it will be
+called `sauron`.
+```ruby
 user_account 'sauron' do
   gid 666
 end
 ```
-### <a name='lwrp-ua-notes'></a> Notes
+Modify existing user, adding valid SSH keys from data bag item `elves` in
+data bag `sshkeys` to `~/legolas/.ssh/authorized_keys`.
+```ruby
+# creates user, searches data bag 'sshkeys' for id 'legolas'
+user_account 'legolas' do
+  authorized_keys 'legolas'
+  authorized_keys_bag 'sshkeys'
+  action :modify
+end
+```
+### <a name='lwrp-ua-notes'></a> Misc. Notes and Considerations
++ Since `:manage_home` is set to `true` (unless home is set to /dev/null),
+removing a user will also remove the home directory.
 + The `:lock` action alone in this LWRP and the Chef user resource does not
-necessarily block a user's access if passwordless SSH is enabled on the node.
+necessarily block a user's access if password-less SSH is enabled on the node.
 Depending on the system, it only locks the password. To ensure access is blocked,
 either `:remove` the user, or at least `:lock` the user and unset `authorized_keys`.
 + The LWRP does not handle password encryption for the `password` attribute.
 There are multiple solutions/tools available to generate valid encrypted passwords.
++ When using the `:modify`, `:lock`, `:unlock`, or `:manage` actions, it will not
+raise an exception if the user does not already exist (however it does log a warning).
++ It does not (currently) expose the `system` or `non-unique` attributes of the
+Chef user resource.
 
 ## <a name='license'></a> License and Author
 - Author:: Brian Clark <brian@clark.zone> ([bdclark](https://github.com/bdclark))
