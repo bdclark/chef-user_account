@@ -112,20 +112,46 @@ def manage_home_files
 end
 
 def authorized_keys_file(homedir, user, group)
-  if new_resource.authorized_keys
+  keys = authorized_keys
+  if keys
     template "#{homedir}/.ssh/authorized_keys" do
       source 'authorized_keys.erb'
       cookbook new_resource.cookbook
       owner user
       group group
       mode '0600'
-      variables ssh_keys: new_resource.authorized_keys
+      variables ssh_keys: keys
     end
   else
     file "#{homedir}/.ssh/authorized_keys" do
       action :delete
     end
   end
+end
+
+def authorized_keys
+  keys = []
+  Array(new_resource.authorized_keys).each do |item|
+    if valid_public_key?(item)
+      keys << item
+    else
+      user = data_bag_item(new_resource.authorized_keys_bag, item)
+      if user['authorized_keys']
+        Array(user['authorized_keys']).each do |key|
+          keys << key if valid_public_key?(key)
+        end
+      else
+        msg = 'Unable to find authorized_keys from data bag '\
+          "'#{new_resource.authorized_keys_bag}' for user '#{item}'"
+        Chef::Log.info(msg)
+      end
+    end
+  end
+  keys.empty? ? nil : keys
+end
+
+def valid_public_key?(key)
+  key =~ /^(ssh-(dss|rsa|ed25519)|ecdsa-sha2-\w+) AAAA/ ? true : false
 end
 
 def ssh_directory(homedir, user, group)
