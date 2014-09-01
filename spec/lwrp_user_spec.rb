@@ -1,6 +1,10 @@
 require 'spec_helper'
 
 recipe = 'user_test::lwrp_user'
+auth_key_bag = {
+  id: 'bob',
+  authorized_keys: ['ssh-rsa AAAAmykey']
+}
 
 describe 'user_account lwrp' do
   let(:chef_run) do
@@ -128,7 +132,8 @@ describe 'user_account lwrp' do
         before do
           chef_run.node.set['user_test']['action'] = action
           chef_run.node.set['user_test']['home'] = '/home/tu'
-          chef_run.node.set['user_test']['authorized_keys'] = %w(mykey yourkey)
+          chef_run.node.set['user_test']['authorized_keys'] =
+            ['ssh-rsa AAAAmykey', 'ssh-rsa AAAAyourkey']
           expect(Etc).to receive(:getpwnam).and_raise(ArgumentError)
           expect(Chef::Log).to receive(:warn).with(/user does not exist/)
           chef_run.converge(recipe)
@@ -181,7 +186,8 @@ describe 'user_account lwrp' do
         before do
           chef_run.node.set['user_test']['action'] = action
           chef_run.node.set['user_test']['home'] = '/home/tu'
-          chef_run.node.set['user_test']['authorized_keys'] = %w(mykey yourkey)
+          chef_run.node.set['user_test']['authorized_keys'] =
+            ['ssh-rsa AAAAmykey', 'ssh-rsa AAAAyourkey']
           chef_run.node.set['user_test']['sudo'] = true
           allow(Etc).to receive(:getpwnam).and_return(etc)
           chef_run.converge(recipe)
@@ -237,6 +243,37 @@ describe 'user_account lwrp' do
           end
           it 'deletes authorized_keys file' do
             expect(chef_run).to delete_file('/home/tu/.ssh/authorized_keys')
+          end
+        end
+
+        context "when authorized_keys doesn't match a public key format" do
+          before(:each) do
+            chef_run.node.set['user_test']['authorized_keys'] = 'bob'
+          end
+          context 'when authorized_keys_bag is not set' do
+            before do
+              # chef_run.node.set['user_test']['authorized_keys'] = 'bob'
+              allow(Etc).to receive(:getpwnam).and_return(etc)
+              stub_data_bag_item(nil, 'bob').and_return('asdf')
+              chef_run.converge(recipe)
+            end
+            it 'does not add key' do
+              expect(chef_run)
+                .not_to create_template('/home/tu/.ssh/authorized_keys')
+            end
+          end
+          context 'when authorized_keys_bag is set' do
+            before do
+              # chef_run.node.set['user_test']['authorized_keys'] = 'bob'
+              chef_run.node.set['user_test']['authorized_keys_bag'] = 'keys'
+              allow(Etc).to receive(:getpwnam).and_return(etc)
+              stub_data_bag_item('keys', 'bob').and_return(auth_key_bag)
+              chef_run.converge(recipe)
+            end
+            it 'looks up item in data bag and adds key' do
+              expect(chef_run).to create_template(
+                '/home/tu/.ssh/authorized_keys')
+            end
           end
         end
       end

@@ -15,6 +15,7 @@ user_account 'test_user' do
   shell node['user_test']['shell'] if node['user_test']['shell']
   password node['user_test']['password'] if node['user_test']['password']
   authorized_keys node['user_test']['authorized_keys'] if node['user_test']['authorized_keys']
+  authorized_keys_bag node['user_test']['authorized_keys_bag'] if node['user_test']['authorized_keys_bag']
   sudo node['user_test']['sudo'] if node['user_test']['sudo']
   action node['user_test']['action'] || :create
   notifies :write, 'log[log]', :immediately

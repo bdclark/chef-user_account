@@ -10,6 +10,15 @@ describe user('bilbo') do
   it { should exist }
   it { should belong_to_group 100 }
   it { should have_home_directory '/home/bilbo' }
+  it { should have_authorized_key 'ssh-rsa AAAAkey' }
+  it { should have_authorized_key 'ssh-rsa AAAAdatabagpublickey' }
+end
+
+describe user('legolas') do
+  it { should exist }
+  it { should have_authorized_key 'ssh-rsa AAAAelfpublickey1' }
+  it { should have_authorized_key 'ssh-rsa AAAAelfpublickey2' }
+  it { should_not have_authorized_key 'badelfpublickey' }
 end
 
 describe user('sauron') do
@@ -17,8 +26,8 @@ describe user('sauron') do
   it { should have_uid 666 }
   it { should have_home_directory '/home/morder' }
   it { should belong_to_group 'sauron' }
-  it { should have_authorized_key 'abcdef' }
-  it { should have_authorized_key '0123456789' }
+  it { should have_authorized_key 'ssh-rsa AAAAmykey' }
+  it { should have_authorized_key 'ssh-rsa AAAAmyotherkey' }
 end
 
 describe file('/etc/sudoers.d/sauron') do
@@ -32,10 +41,11 @@ describe user('gandalf') do
   it { should have_home_directory '/dev/null' }
   it { should belong_to_primary_group 'wizards' }
   it { should have_login_shell '/bin/false' }
+  it { should_not have_authorized_key 'ssh-rsa AAAAgandalfkey' }
 end
 
 describe user('root') do
-  it { should have_authorized_key 'roots_authorized_key' }
+  it { should have_authorized_key 'ssh-ed25519 AAAAroots_authorized_key' }
 end
 
 describe user('gollum') do
