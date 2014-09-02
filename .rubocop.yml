@@ -12,7 +12,7 @@ Style/SingleSpaceBeforeFirstArg:
   Enabled: false
 
 Style/MethodLength:
-  Max: 20
+  Max: 40
 
 # Style/HashSyntax:
 #   EnforcedStyle: hash_rockets

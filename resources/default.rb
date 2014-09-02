@@ -25,6 +25,7 @@ attribute :comment, kind_of: String
 attribute :uid, kind_of: [String, Integer]
 attribute :gid, kind_of: [String, Integer]
 attribute :home, kind_of: String
+attribute :manage_home, kind_of: [TrueClass, FalseClass], default: true
 attribute :shell, kind_of: String
 attribute :password, kind_of: String
 attribute :authorized_keys, kind_of: [Array, String]

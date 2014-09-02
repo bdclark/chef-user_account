@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+require 'chef/data_bag'
+
 use_inline_resources if defined?(use_inline_resources)
 
 def whyrun_supported?
@@ -82,11 +84,7 @@ def user_resource(exec_action)
     comment new_resource.comment if new_resource.comment
     shell new_resource.shell if new_resource.shell
     password new_resource.password if new_resource.password
-    if new_resource.home == '/dev/null'
-      supports manage_home: false
-    else
-      supports manage_home: true
-    end
+    supports manage_home: new_resource.manage_home
     home new_resource.home if new_resource.home
     action :nothing
   end.run_action(exec_action)
@@ -102,12 +100,14 @@ def sudo_resource(user, exec_action)
 end
 
 def manage_home_files
-  if home_dir
+  home = home_directory
+  if home
     user_group = Etc.getpwnam(@username).gid
-    ssh_directory(home_dir, @username, user_group)
-    authorized_keys_file(home_dir, @username, user_group)
+    ssh_directory(home, @username, user_group)
+    authorized_keys_file(home, @username, user_group)
   else
-    Chef::Log.warn("Unable to manage files for #{new_resource.username}")
+    msg = "user_account[#{@username}] unable to manage home files for user"
+    Chef::Log.warn(msg)
   end
 end
 
@@ -135,14 +135,33 @@ def authorized_keys
     if valid_public_key?(item)
       keys << item
     else
-      user = data_bag_item(new_resource.authorized_keys_bag, item)
+      key_bag = new_resource.authorized_keys_bag
+      msg = "user_account[#{@username}] value '#{item}' does not seem to be a"\
+        ' valid public SSH key'
+      if key_bag.nil?  || key_bag.empty?
+        msg << ' and a data bag was not specified - skipping key'
+        Chef::Log.warn(msg)
+        next
+      end
+      unless Chef::DataBag.list.key?(key_bag)
+        msg << " and data bag '#{key_bag}' not found - skipping key"
+        Chef::Log.warn(msg)
+        next
+      end
+      user = data_bag_item(key_bag, item)
       if user['authorized_keys']
         Array(user['authorized_keys']).each do |key|
-          keys << key if valid_public_key?(key)
+          if valid_public_key?(key)
+            keys << key
+          else
+            msg = "user_account[#{@username}] value from data bag '#{key_bag}'"\
+              " with id '#{item}' not a valid public SSH key - skipping key"
+            Chef::Log.warn(msg)
+          end
         end
       else
-        msg = 'Unable to find authorized_keys from data bag '\
-          "'#{new_resource.authorized_keys_bag}' for user '#{item}'"
+        msg = "user_account[#{@username}] unable to find authorized_keys from"\
+          " data bag '#{key_bag}' with id '#{item}' - skipping key"
         Chef::Log.info(msg)
       end
     end
@@ -175,7 +194,8 @@ def ensure_user_group
     Etc.getgrgid(new_resource.gid).gid
   end
 rescue ArgumentError
-  Chef::Log.info("Creating gid #{group_name} for user #{@username}")
+  Chef::Log.info("user_account[#{@username}] creating gid #{group_name} "\
+    "for user #{@username}")
   group group_name do
     gid new_resource.gid if new_resource.gid.is_a?(Integer)
   end.run_action(:create)
@@ -185,12 +205,13 @@ end
 def user_exists?
   true if Etc.getpwnam(@username)
 rescue ArgumentError
-  msg = "cannot #{new_resource.action} user #{@username} - user does not exist"
+  msg = "user_account[#{@username}] cannot #{new_resource.action} "\
+    "user #{@username} - user does not exist"
   Chef::Log.warn(msg)
   false
 end
 
-def home_dir
+def home_directory
   home = Etc.getpwnam(@username).dir
   home == '/dev/null' ? nil : home
 rescue ArgumentError
