@@ -78,14 +78,16 @@ private
 
 def user_resource(exec_action)
   group_id = ensure_user_group if new_resource.gid
+  home = home_directory
   user @username do
     uid new_resource.uid if new_resource.uid
     gid group_id if group_id
     comment new_resource.comment if new_resource.comment
     shell new_resource.shell if new_resource.shell
     password new_resource.password if new_resource.password
-    supports manage_home: new_resource.manage_home
-    home new_resource.home if new_resource.home
+    supports manage_home: new_resource.manage_home ||
+      node['user_account']['manage_home']
+    home home
     action :nothing
   end.run_action(exec_action)
 end
@@ -101,7 +103,7 @@ end
 
 def manage_ssh_files
   home = home_directory
-  if home
+  if ::File.directory?(home)
     user_group = Etc.getpwnam(@username).gid
     ssh_directory(home, @username, user_group)
     authorized_keys_file(home, @username, user_group)
@@ -212,8 +214,9 @@ rescue ArgumentError
 end
 
 def home_directory
-  home = Etc.getpwnam(@username).dir
-  home == '/dev/null' ? nil : home
+  return new_resource.home if new_resource.home
+  # get /etc/passwd home if user exists
+  Etc.getpwnam(@username).dir
 rescue ArgumentError
-  return nil
+  return ::File.join(node['user_account']['home_root'], @username)
 end

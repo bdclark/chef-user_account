@@ -179,6 +179,10 @@ describe 'user_account lwrp' do
             ['ssh-rsa AAAAmykey', 'ssh-rsa AAAAyourkey']
           chef_run.node.set['user_test']['sudo'] = true
           allow(Etc).to receive(:getpwnam).and_return(etc)
+          allow(::File).to receive(:directory?)
+            .with(anything).and_call_original
+          allow(::File).to receive(:directory?)
+            .with('/home/tu').and_return(true)
           chef_run.converge(recipe)
         end
         it 'performs correct user action' do
