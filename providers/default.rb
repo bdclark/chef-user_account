@@ -79,14 +79,18 @@ private
 def user_resource(exec_action)
   group_id = ensure_user_group if new_resource.gid
   home = home_directory
+  manage_home = if new_resource.manage_home.nil?
+                  node['user_account']['manage_home']
+                else
+                  new_resource.manage_home
+                end
   user @username do
     uid new_resource.uid if new_resource.uid
     gid group_id if group_id
     comment new_resource.comment if new_resource.comment
     shell new_resource.shell if new_resource.shell
     password new_resource.password if new_resource.password
-    supports manage_home: new_resource.manage_home ||
-      node['user_account']['manage_home']
+    supports manage_home: manage_home
     home home
     action :nothing
   end.run_action(exec_action)

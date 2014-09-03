@@ -69,6 +69,12 @@ describe 'user_account lwrp' do
       expect(chef_run).to create_user('test_user').with(
         supports: { manage_home: true })
     end
+    it 'does not manage home if manage_home false' do
+      chef_run.node.set['user_test']['manage_home'] = false
+      chef_run.converge(recipe)
+      expect(chef_run).to create_user('test_user').with(
+        supports: { manage_home: false })
+    end
     it 'assigns the specified shell' do
       expect(chef_run).to create_user('test_user').with(shell: '/bin/false')
     end
