@@ -52,7 +52,8 @@ end
 describe user('gandalf') do
   it { should exist }
   it { should have_home_directory '/dev/null' }
-  it { should belong_to_primary_group 'wizards' }
+  # it { should belong_to_primary_group 'wizards' }
+  it { should belong_to_group 'wizards' }
   it { should have_login_shell '/bin/false' }
   it { should_not have_authorized_key 'ssh-rsa AAAAgandalfkey' }
 end

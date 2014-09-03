@@ -40,6 +40,16 @@ support more:
 ### <a name='recipe-default'></a> default
 This recipe is a no-op and does nothing (and never will).
 
+## <a name='attributes'></a> Attributes
+
+#### home_root
+The default parent path of a user's home directory. Can be overridden by each
+resource.  Defaults to `/Users` for OSX, otherwise `/home`.
+
+#### manage_home
+Whether of not to manage the home directory of a user by default. Can be
+overridden by each resource. Default is `true`.
+
 ## <a name='lwrps'></a> LWRPs
 ### <a name='lwrp-ua'></a> user_account
 The `user_account` LWRP is an opinionated extension of the Chef user
@@ -52,8 +62,8 @@ Action    | Description
 `:create` | **Default action**: create user account
 `:remove` | remove user (and remove from /etc/sudoers.d even if `sudo` attribute is true)
 `:modify` | modify user account
-`:lock`   | lock user account
-`:unlock` | unlock user account
+`:lock`   | lock user password (**note**: does not necessarily block a user from password-less SSH)
+`:unlock` | unlock user password
 `:manage` | manage user account
 
 ### <a name='lwrp-ua-attributes'></a> Attributes
@@ -65,6 +75,7 @@ comment         | comment passed to chef user resource          | `nil`
 uid             | uid passed to chef user resource              | `nil`
 gid             | gid passed to chef user resource (see below)  | `nil`
 home            | home directory passed to chef user resource   | `nil`
+manage_home     | whether to manage user's home directory       | `true`
 shell           | shell passed to chef user resource            | `nil`
 password        | password passed to chef user resource         | `nil`
 authorized_keys | string/array of public SSH keys, and/or data bag item(s) to lookup | `nil`
@@ -105,9 +116,7 @@ it must at least contain `id` and `authorized_keys` keys. For example:
 }
 ```
 Public SSH keys specified with `authorized_keys` will be created in
-`~/.ssh/authorized_keys`. Please note this LWRP always sets `:manage_home` to
-`true` in the underlying Chef user resource unless `home` is set to to `/dev/null`.
-If set as such, it will not attempt to manage any keys in `authorized_keys`.
+`~/.ssh/authorized_keys` as long as home directory is valid (e.g. not /dev/null).
 
 ### <a name='lwrp-ua-examples'></a> Usage and Examples
 Using defaults, create user w/ no password and managed home directory
@@ -145,12 +154,6 @@ user_account 'legolas' do
 end
 ```
 ### <a name='lwrp-ua-notes'></a> Misc. Notes and Considerations
-+ Since `:manage_home` is set to `true` (unless home is set to /dev/null),
-removing a user will also remove the home directory.
-+ The `:lock` action alone in this LWRP and the Chef user resource does not
-necessarily block a user's access if password-less SSH is enabled on the node.
-Depending on the system, it only locks the password. To ensure access is blocked,
-either `:remove` the user, or at least `:lock` the user and unset `authorized_keys`.
 + The LWRP does not handle password encryption for the `password` attribute.
 There are multiple solutions/tools available to generate valid encrypted passwords.
 + When using the `:modify`, `:lock`, `:unlock`, or `:manage` actions, it will not
