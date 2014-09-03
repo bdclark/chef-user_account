@@ -14,6 +14,18 @@ describe user('bilbo') do
   it { should have_authorized_key 'ssh-rsa AAAAdatabagpublickey' }
 end
 
+describe file('/home/bilbo/.ssh') do
+  it { should be_directory }
+  it { should be_mode 700 }
+  it { be_owned_by 'bilbo' }
+end
+
+describe file('/home/bilbo/.ssh/authorized_keys') do
+  it { should be_file }
+  it { should be_owned_by 'bilbo' }
+  it { should be_mode 600 }
+end
+
 describe user('legolas') do
   it { should exist }
   it { should have_authorized_key 'ssh-rsa AAAAelfpublickey1' }
@@ -34,6 +46,7 @@ describe file('/etc/sudoers.d/sauron') do
   it { should be_file }
   its(:content) { should match(/sauron  ALL=\(ALL\) NOPASSWD:ALL/) }
   it { should be_owned_by 'root' }
+  it { should be_mode 440 }
 end
 
 describe user('gandalf') do

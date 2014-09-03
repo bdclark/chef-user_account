@@ -32,14 +32,14 @@ end
 action :create do
   user_resource(:create)
   sudo_resource(@username, :install)
-  manage_home_files
+  manage_ssh_files
 end
 
 action :modify do
   if user_exists?
     user_resource(:modify)
     sudo_resource(@username, :install)
-    manage_home_files
+    manage_ssh_files
   end
 end
 
@@ -47,7 +47,7 @@ action :manage do
   if user_exists?
     user_resource(:manage)
     sudo_resource(@username, :install)
-    manage_home_files
+    manage_ssh_files
   end
 end
 
@@ -55,7 +55,7 @@ action :lock do
   if user_exists?
     user_resource(:lock)
     sudo_resource(@username, :install)
-    manage_home_files
+    manage_ssh_files
   end
 end
 
@@ -63,7 +63,7 @@ action :unlock do
   if user_exists?
     user_resource(:unlock)
     sudo_resource(@username, :install)
-    manage_home_files
+    manage_ssh_files
   end
 end
 
@@ -99,14 +99,14 @@ def sudo_resource(user, exec_action)
   end
 end
 
-def manage_home_files
+def manage_ssh_files
   home = home_directory
   if home
     user_group = Etc.getpwnam(@username).gid
     ssh_directory(home, @username, user_group)
     authorized_keys_file(home, @username, user_group)
-  else
-    msg = "user_account[#{@username}] unable to manage home files for user"
+  elsif new_resource.authorized_keys && !new_resource.authorized_keys.empty?
+    msg = "user_account[#{@username}] unable to manage ssh files for user"
     Chef::Log.warn(msg)
   end
 end
@@ -136,10 +136,10 @@ def authorized_keys
       keys << item
     else
       key_bag = new_resource.authorized_keys_bag
-      msg = "user_account[#{@username}] value '#{item}' does not seem to be a"\
-        ' valid public SSH key'
+      msg = "user_account[#{@username}] authorized_key '#{item}'"\
+        ' not a valid public SSH key'
       if key_bag.nil?  || key_bag.empty?
-        msg << ' and a data bag was not specified - skipping key'
+        msg << ' and authorized_keys_bag not specified - skipping key'
         Chef::Log.warn(msg)
         next
       end
