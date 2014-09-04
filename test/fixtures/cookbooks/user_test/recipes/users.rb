@@ -46,6 +46,6 @@ user_account 'root' do
 end
 
 user_account 'gollum' do
-  action :lock
+  action [:create, :remove]
   authorized_keys 'asdf'
 end

@@ -6,9 +6,9 @@ auth_key_bag = {
   authorized_keys: ['ssh-rsa AAAAmykey']
 }
 
-describe 'user_account lwrp' do
+describe 'step into user_account lwrp' do
   let(:chef_run) do
-    ChefSpec::Runner.new(step_into: ['user_account'])
+    ChefSpec::Runner.new(step_into: ['user_account']).converge(recipe)
   end
   let(:getpwnam) do
     double('pwnam', uid: 888, gid: 999, dir: '/home/test_user')
@@ -17,7 +17,6 @@ describe 'user_account lwrp' do
   context 'with no attributes' do
     before(:each) do
       allow(Etc).to receive(:getpwnam).and_return(getpwnam)
-      chef_run.converge(recipe)
     end
 
     it 'creates a user with username as named attribute' do
@@ -50,11 +49,10 @@ describe 'user_account lwrp' do
       chef_run.node.set['user_test']['shell'] = '/bin/false'
       chef_run.node.set['user_test']['password'] = 'secret'
       chef_run.node.set['user_test']['sudo'] = true
-    end
-    before(:each) do
       allow(Etc).to receive(:getpwnam).and_return(getpwnam)
       chef_run.converge(recipe)
     end
+
     it 'assigns the specified username' do
       expect(chef_run).to create_user('test_user').with(username: 'test_user')
     end
@@ -122,39 +120,14 @@ describe 'user_account lwrp' do
   end
 
   context 'with a non-existing user' do
-    [:lock, :unlock, :manage, :modify].each do |action|
+    let(:no_user_run) { chef_run.converge(recipe) }
+    [:lock, :unlock, :modify].each do |action|
       context "when action is #{action}" do
         before do
           chef_run.node.set['user_test']['action'] = action
-          chef_run.node.set['user_test']['home'] = '/home/tu'
-          chef_run.node.set['user_test']['authorized_keys'] =
-            ['ssh-rsa AAAAmykey', 'ssh-rsa AAAAyourkey']
-          expect(Etc).to receive(:getpwnam).and_raise(ArgumentError)
-          expect(Chef::Log).to receive(:warn).with(/user does not exist/)
-          chef_run.converge(recipe)
         end
-        it 'does not perform any user action' do
-          expect(chef_run).not_to create_user('test_user')
-          expect(chef_run).not_to remove_user('test_user')
-          expect(chef_run).not_to lock_user('test_user')
-          expect(chef_run).not_to unlock_user('test_user')
-          expect(chef_run).not_to modify_user('test_user')
-          expect(chef_run).not_to manage_user('test_user')
-        end
-        it 'does not perform sudo action' do
-          expect(chef_run).not_to remove_sudo('test_user')
-          expect(chef_run).not_to install_sudo('test_user')
-        end
-        it 'does not create .ssh dir' do
-          expect(chef_run).not_to create_directory('/home/tu/.ssh')
-        end
-        it 'does not create authorized_keys' do
-          expect(chef_run)
-            .not_to create_template('/home/tu/.ssh/authorized_keys')
-        end
-        it 'does not delete authorized_keys' do
-          expect(chef_run)
-            .not_to delete_file('/home/tu/.ssh/authorized_keys')
+        it 'raises an error' do
+          expect { no_user_run }.to raise_error
         end
       end
     end

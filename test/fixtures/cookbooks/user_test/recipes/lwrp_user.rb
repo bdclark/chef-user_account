@@ -9,16 +9,16 @@
 node.default['user_test']['uid'] = nil
 
 user_account 'test_user' do
-  uid node['user_test']['uid'] if node['user_test']['uid']
-  gid node['user_test']['gid'] if node['user_test']['gid']
-  home node['user_test']['home'] if node['user_test']['home']
+  uid node['user_test']['uid'] unless node['user_test']['uid'].nil?
+  gid node['user_test']['gid'] unless node['user_test']['gid'].nil?
+  home node['user_test']['home'] unless node['user_test']['home'].nil?
   manage_home node['user_test']['manage_home'] unless node['user_test']['manage_home'].nil?
-  shell node['user_test']['shell'] if node['user_test']['shell']
-  password node['user_test']['password'] if node['user_test']['password']
-  authorized_keys node['user_test']['authorized_keys'] if node['user_test']['authorized_keys']
-  authorized_keys_bag node['user_test']['authorized_keys_bag'] if node['user_test']['authorized_keys_bag']
+  shell node['user_test']['shell'] unless node['user_test']['shell'].nil?
+  password node['user_test']['password'] unless node['user_test']['password'].nil?
+  authorized_keys node['user_test']['authorized_keys'] unless node['user_test']['authorized_keys'].nil?
+  authorized_keys_bag node['user_test']['authorized_keys_bag'] unless node['user_test']['authorized_keys_bag'].nil?
   sudo node['user_test']['sudo'] unless node['user_test']['sudo'].nil?
-  action node['user_test']['action'] || :create
+  action node['user_test']['action'] unless node['user_test']['action'].nil?
   notifies :write, 'log[log]', :immediately
 end
 

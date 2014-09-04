@@ -36,11 +36,10 @@ action :create do
 end
 
 action :modify do
-  if user_exists?
-    user_resource(:modify)
-    sudo_resource(@username, :install)
-    manage_ssh_files
-  end
+  assert_user_exists(:modify)
+  user_resource(:modify)
+  sudo_resource(@username, :install)
+  manage_ssh_files
 end
 
 action :manage do
@@ -48,23 +47,24 @@ action :manage do
     user_resource(:manage)
     sudo_resource(@username, :install)
     manage_ssh_files
+  else
+    msg = "user_account[#{@username}] unable to manage user - does not exist!"
+    Chef::Log.info(msg)
   end
 end
 
 action :lock do
-  if user_exists?
-    user_resource(:lock)
-    sudo_resource(@username, :install)
-    manage_ssh_files
-  end
+  assert_user_exists(:lock)
+  user_resource(:lock)
+  sudo_resource(@username, :install)
+  manage_ssh_files
 end
 
 action :unlock do
-  if user_exists?
-    user_resource(:unlock)
-    sudo_resource(@username, :install)
-    manage_ssh_files
-  end
+  assert_user_exists(:unlock)
+  user_resource(:unlock)
+  sudo_resource(@username, :install)
+  manage_ssh_files
 end
 
 action :remove do
@@ -200,21 +200,11 @@ def ensure_user_group
     Etc.getgrgid(new_resource.gid).gid
   end
 rescue ArgumentError
-  Chef::Log.info("user_account[#{@username}] creating gid #{group_name} "\
-    "for user #{@username}")
+  Chef::Log.info("user_account[#{@username}] creating group #{group_name}")
   group group_name do
     gid new_resource.gid if new_resource.gid.is_a?(Integer)
   end.run_action(:create)
   Etc.getgrnam(group_name).gid
-end
-
-def user_exists?
-  true if Etc.getpwnam(@username)
-rescue ArgumentError
-  msg = "user_account[#{@username}] cannot #{new_resource.action} "\
-    "user #{@username} - user does not exist"
-  Chef::Log.warn(msg)
-  false
 end
 
 def home_directory
@@ -223,4 +213,15 @@ def home_directory
   Etc.getpwnam(@username).dir
 rescue ArgumentError
   return ::File.join(node['user_account']['home_root'], @username)
+end
+
+def user_exists?
+  true if Etc.getpwnam(@username)
+rescue ArgumentError
+  false
+end
+
+def assert_user_exists(exec_action)
+  return true if user_exists?
+  fail "Cannot #{exec_action} user #{@username} - does not exist!"
 end
