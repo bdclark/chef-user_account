@@ -147,13 +147,13 @@ end
 Modify existing user, adding valid SSH keys from data bag item `elves` in
 data bag `sshkeys` to `~/legolas/.ssh/authorized_keys`.
 ```ruby
-# creates user, searches data bag 'sshkeys' for id 'legolas'
 user_account 'legolas' do
   authorized_keys 'elves'
   authorized_keys_bag 'sshkeys'
   action :modify
 end
 ```
+
 ### <a name='lwrp-ua-notes'></a> Misc. Notes and Considerations
 + The LWRP does not handle password encryption for the `password` attribute.
 There are multiple solutions/tools available to generate valid encrypted passwords.
