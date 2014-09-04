@@ -103,14 +103,14 @@ it must at least contain `id` and `authorized_keys` keys. For example:
 ```json
 {
   "id": "username",
-  "authorized_keys": "ssh-rsa    AAAA..."
+  "authorized_keys": "ssh-rsa AAAA..."
 }
 ```
 ```json
 {
   "id": "username",
   "authorized_keys": [
-    "ssh-rsa    AAAA...",
+    "ssh-rsa AAAA...",
     "ssh-ed25519 AAAA..."
   ]
 }
@@ -132,7 +132,7 @@ user_account 'sgamgee' do
   comment 'Samwise Gamgee'
   gid 'hobbits'
   home '/home/shire'
-  authorized_keys ['ssh-rsa    AAAA...', 'ssh-rsa    AAAA...']
+  authorized_keys ['ssh-rsa AAAAfoo...', 'ssh-rsa AAAAbar...']
   sudo true
   action :create
 end
