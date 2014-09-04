@@ -68,16 +68,14 @@ action :unlock do
 end
 
 action :remove do
-  user new_resource.username do
-    action :remove
-  end
+  user_resource(:remove)
   sudo_resource(@username, :remove)
 end
 
 private
 
 def user_resource(exec_action)
-  group_id = ensure_user_group if new_resource.gid
+  group_id = ensure_user_group if new_resource.gid && exec_action != :remove
   home = home_directory
   manage_home = if new_resource.manage_home.nil?
                   node['user_account']['manage_home']

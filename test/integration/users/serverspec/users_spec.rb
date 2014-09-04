@@ -65,3 +65,8 @@ end
 describe user('gollum') do
   it { should_not exist }
 end
+
+describe file('/home/gollum') do
+  it { should_not be_file }
+  it { should_not be_directory }
+end
