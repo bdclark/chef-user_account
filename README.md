@@ -160,7 +160,7 @@ There are multiple solutions/tools available to generate valid encrypted passwor
 See the [chef docs](https://docs.getchef.com/resource_user.html#password-shadow-hash)
 for details.
 + Keep in mind the `:lock` and `:unlock` actions only affect a user's
-password. Locking a password does necessarily not block a user from SSH access,
+password. Locking a password does not necessarily block a user from SSH access,
 for example if password-less SSH is enabled and authorized_keys exists for the user.
 
 ## <a name='license'></a> License and Author
