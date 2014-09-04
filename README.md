@@ -50,10 +50,10 @@ resource.  Defaults to `/Users` for OSX, otherwise `/home`.
 Whether of not to manage the home directory of a user by default. Can be
 overridden by each resource. Default is `true`.
 
-## <a name='lwrps'></a> LWRPs
+## <a name='lwrps'></a> Resources and Providers
 ### <a name='lwrp-ua'></a> user_account
-The `user_account` LWRP is an opinionated extension of the Chef user
-resource with some added functionality and a few differences.
+The `user_account` LWRP manages users, their SSH authorized_keys files, and
+per-user sudo privileges.
 
 ### <a name='lwrp-ua-actions'></a> Actions
 
@@ -61,10 +61,10 @@ Action    | Description
 ----------|---------------------------------------------
 `:create` | **Default action**: create user account
 `:remove` | remove user (and remove from /etc/sudoers.d even if `sudo` attribute is true)
-`:modify` | modify user account
-`:lock`   | lock user password (**note**: does not necessarily block a user from password-less SSH)
-`:unlock` | unlock user password
-`:manage` | manage user account
+`:modify` | modify user account (raises error if user does not exist)
+`:lock`   | lock user password (raises error if user does not exist)
+`:unlock` | unlock user password (raises error if user does not exist)
+`:manage` | manage user account (does nothing if user does not exist)
 
 ### <a name='lwrp-ua-attributes'></a> Attributes
 
@@ -120,6 +120,7 @@ Public SSH keys specified with `authorized_keys` will be created in
 
 ### <a name='lwrp-ua-examples'></a> Usage and Examples
 Using defaults, create user w/ no password and managed home directory
+(`/home/bbaggins` by default, or `/Users/bbaggins` on OSX).
 ```ruby
 user_account 'bbaggins'
 ```
@@ -156,10 +157,11 @@ end
 ### <a name='lwrp-ua-notes'></a> Misc. Notes and Considerations
 + The LWRP does not handle password encryption for the `password` attribute.
 There are multiple solutions/tools available to generate valid encrypted passwords.
-+ When using the `:modify`, `:lock`, `:unlock`, or `:manage` actions, it will not
-raise an exception if the user does not already exist (however it does log a warning).
-+ It does not (currently) expose the `system` or `non-unique` attributes of the
-Chef user resource.
+See the [chef docs](https://docs.getchef.com/resource_user.html#password-shadow-hash)
+for details.
++ Keep in mind the `:lock` and `:unlock` actions only affect a user's
+password. Locking a password does necessarily not block a user from SSH access,
+for example if password-less SSH is enabled and authorized_keys exists for the user.
 
 ## <a name='license'></a> License and Author
 - Author:: Brian Clark <brian@clark.zone> ([bdclark](https://github.com/bdclark))
