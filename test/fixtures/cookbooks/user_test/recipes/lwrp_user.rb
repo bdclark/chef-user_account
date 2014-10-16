@@ -4,7 +4,7 @@
 #
 # Copyright (C) 2014 Brian Clark <brian@clark.zone>
 #
-# rubocop:disable Style/LineLength
+# rubocop:disable Metrics/LineLength
 
 node.default['user_test']['uid'] = nil
 

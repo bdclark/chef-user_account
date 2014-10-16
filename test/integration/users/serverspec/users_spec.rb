@@ -1,4 +1,6 @@
-require 'spec_helper'
+require 'serverspec'
+
+set :backend, :exec
 
 describe user('frodo') do
   it { should exist }
@@ -44,7 +46,7 @@ end
 
 describe file('/etc/sudoers.d/sauron') do
   it { should be_file }
-  its(:content) { should match(/sauron  ALL=\(ALL\) NOPASSWD:ALL/) }
+  its(:content) { should match(/sauron ALL=\(ALL\) NOPASSWD:ALL/) }
   it { should be_owned_by 'root' }
   it { should be_mode 440 }
 end
