@@ -109,7 +109,7 @@ def manage_ssh_files
     user_group = Etc.getpwnam(@username).gid
     ssh_directory(home, @username, user_group)
     authorized_keys_file(home, @username, user_group)
-  elsif new_resource.authorized_keys && !new_resource.authorized_keys.empty?
+  elsif new_resource.ssh_keys && !new_resource.ssh_keys.empty?
     msg = "user_account[#{@username}] unable to manage ssh files for user"
     Chef::Log.warn(msg)
   end
@@ -135,15 +135,15 @@ end
 
 def authorized_keys
   keys = []
-  Array(new_resource.authorized_keys).each do |item|
+  Array(new_resource.ssh_keys).each do |item|
     if valid_public_key?(item)
       keys << item
     else
-      key_bag = new_resource.authorized_keys_bag
+      key_bag = new_resource.ssh_keys_bag
       msg = "user_account[#{@username}] authorized_key '#{item}'"\
         ' not a valid public SSH key'
       if key_bag.nil?  || key_bag.empty?
-        msg << ' and authorized_keys_bag not specified - skipping key'
+        msg << ' and ssh_keys_bag not specified - skipping key'
         Chef::Log.warn(msg)
         next
       end
@@ -153,8 +153,8 @@ def authorized_keys
         next
       end
       user = data_bag_item(key_bag, item)
-      if user['authorized_keys']
-        Array(user['authorized_keys']).each do |key|
+      if user['ssh_keys']
+        Array(user['ssh_keys']).each do |key|
           if valid_public_key?(key)
             keys << key
           else
@@ -164,7 +164,7 @@ def authorized_keys
           end
         end
       else
-        msg = "user_account[#{@username}] unable to find authorized_keys from"\
+        msg = "user_account[#{@username}] unable to find ssh_keys from"\
           " data bag '#{key_bag}' with id '#{item}' - skipping key"
         Chef::Log.info(msg)
       end
@@ -178,7 +178,7 @@ def valid_public_key?(key)
 end
 
 def ssh_directory(homedir, user, group)
-  return unless new_resource.authorized_keys
+  return unless new_resource.ssh_keys
   directory "#{homedir}/.ssh" do
     owner user
     group group

@@ -28,7 +28,7 @@ attribute :home, kind_of: String
 attribute :manage_home, kind_of: [TrueClass, FalseClass], default: nil
 attribute :shell, kind_of: String
 attribute :password, kind_of: String
-attribute :authorized_keys, kind_of: [Array, String]
-attribute :authorized_keys_bag, kind_of: String
+attribute :ssh_keys, kind_of: [Array, String]
+attribute :ssh_keys_bag, kind_of: String
 attribute :cookbook, kind_of: String, default: 'user_account'
 attribute :sudo, kind_of: [TrueClass, FalseClass], default: false

@@ -2,8 +2,6 @@
 
 [![Build Status](https://travis-ci.org/bdclark/chef-user_account.svg)](https://travis-ci.org/bdclark/chef-user_account)
 
-**THIS COOKBOOK IS CURRENTLY UNDER CONSTRUCTION!**
-
 ## <a name='description'></a> Description
 The `user_account` cookbook configures user accounts, SSH authorized_keys,
 user sudo privileges, etc.
@@ -68,20 +66,20 @@ Action    | Description
 
 ### <a name='lwrp-ua-attributes'></a> Attributes
 
-Attribute       | Description                                   | Default
-----------------|-----------------------------------------------|--------
-username        | **Name attribute**: username (required)       | `nil`
-comment         | comment passed to chef user resource          | `nil`
-uid             | uid passed to chef user resource              | `nil`
-gid             | gid passed to chef user resource (see below)  | `nil`
-home            | home directory passed to chef user resource   | `nil`
-manage_home     | whether to manage user's home directory       | `true`
-shell           | shell passed to chef user resource            | `nil`
-password        | password passed to chef user resource         | `nil`
-authorized_keys | string/array of public SSH keys, and/or data bag item(s) to lookup | `nil`
-authorized_keys_bag | optional data bag name holding public SSH keys                 | `nil`
-cookbook        | source of template for authorized_keys file   | `user_account`
-sudo            | whether to enable user sudo in /etc/sudoers.d | `false`
+Attribute    | Description                                    | Default
+-------------|------------------------------------------------|--------
+username     | **Name attribute**: username (required)        | `nil`
+comment      | comment passed to chef user resource           | `nil`
+uid          | uid passed to chef user resource               | `nil`
+gid          | gid passed to chef user resource (see below)   | `nil`
+home         | home directory passed to chef user resource    | `nil`
+manage_home  | whether to manage user's home directory        | `true`
+shell        | shell passed to chef user resource             | `nil`
+password     | password passed to chef user resource          | `nil`
+ssh_keys     | string/array of public SSH keys, and/or data bag item(s) to lookup | `nil`
+ssh_keys_bag | optional data bag name holding public SSH keys | `nil`
+cookbook     | source of template for authorized_keys file    | `user_account`
+sudo         | whether to enable user sudo in /etc/sudoers.d  | `false`
 
 ### <a name='lwrp-ua-description'></a> Description
 If the `gid` attribute is set, the LWRP will create the group if it doesn't
@@ -93,23 +91,23 @@ User-specific sudo rights can be given by setting `sudo` to `true`.
 This attribute requires the node's sudo config to have `#includedir` set properly.
 See the [sudo cookbook](https://github.com/opscode-cookbooks/sudo) for details.
 
-SSH authorized_key(s) can be set by passing a string or array to `authorized_keys`.
+SSH authorized_key(s) can be set by passing a string or array to `ssh_keys`.
 Only valid keys will be added. If an invalid key is provided, it will
 assume the value is a data bag item and attempt to retrieve public key(s) from
-the data bag specified in `authorized_key_bag`. `authorized_keys` can be populated
+the data bag specified in `ssh_keys_bag`. `ssh_keys` can be populated
 with multiple public keys as well multiple data bag items. If a data bag is used,
-it must at least contain `id` and `authorized_keys` keys. For example:
+it must at least contain `id` and `ssh_keys` keys. For example:
 
 ```json
 {
   "id": "username",
-  "authorized_keys": "ssh-rsa AAAA..."
+  "ssh_keys": "ssh-rsa AAAA..."
 }
 ```
 ```json
 {
   "id": "username",
-  "authorized_keys": [
+  "ssh_keys": [
     "ssh-rsa AAAA...",
     "ssh-ed25519 AAAA..."
   ]
@@ -132,7 +130,7 @@ user_account 'sgamgee' do
   comment 'Samwise Gamgee'
   gid 'hobbits'
   home '/home/shire'
-  authorized_keys ['ssh-rsa AAAAfoo...', 'ssh-rsa AAAAbar...']
+  ssh_keys ['ssh-rsa AAAAfoo...', 'ssh-rsa AAAAbar...']
   sudo true
   action :create
 end
@@ -148,8 +146,8 @@ Modify existing user, adding valid SSH keys from data bag item `elves` in
 data bag `sshkeys` to `~/legolas/.ssh/authorized_keys`.
 ```ruby
 user_account 'legolas' do
-  authorized_keys 'elves'
-  authorized_keys_bag 'sshkeys'
+  ssh_keys 'elves'
+  ssh_keys_bag 'sshkeys'
   action :modify
 end
 ```

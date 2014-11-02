@@ -1,6 +1,6 @@
 {
     "id": "elves",
-    "authorized_keys":
+    "ssh_keys":
     [
       "ssh-rsa AAAAelfpublickey1",
       "ssh-rsa AAAAelfpublickey2",

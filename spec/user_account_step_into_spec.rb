@@ -3,7 +3,7 @@ require 'spec_helper'
 recipe = 'user_test::lwrp_user'
 auth_key_bag = {
   id: 'bob',
-  authorized_keys: ['ssh-rsa AAAAmykey']
+  ssh_keys: ['ssh-rsa AAAAmykey']
 }
 
 describe 'step into user_account lwrp' do
@@ -154,7 +154,7 @@ describe 'step into user_account lwrp' do
         before do
           chef_run.node.set['user_test']['action'] = action
           chef_run.node.set['user_test']['home'] = '/home/tu'
-          chef_run.node.set['user_test']['authorized_keys'] =
+          chef_run.node.set['user_test']['ssh_keys'] =
             ['ssh-rsa AAAAmykey', 'ssh-rsa AAAAyourkey']
           chef_run.node.set['user_test']['sudo'] = true
           allow(Etc).to receive(:getpwnam).and_return(etc)
@@ -211,7 +211,7 @@ describe 'step into user_account lwrp' do
           end
         end
 
-        context 'when authorized_keys attribute set' do
+        context 'when ssh_keys attribute set' do
           it 'creates .ssh dir' do
             expect(chef_run).to create_directory('/home/tu/.ssh')
           end
@@ -221,9 +221,9 @@ describe 'step into user_account lwrp' do
           end
         end
 
-        context 'when authorized_keys not set' do
+        context 'when ssh_keys not set' do
           before do
-            chef_run.node.set['user_test']['authorized_keys'] = nil
+            chef_run.node.set['user_test']['ssh_keys'] = nil
             allow(Etc).to receive(:getpwnam).and_return(etc)
             chef_run.converge(recipe)
           end
@@ -239,22 +239,22 @@ describe 'step into user_account lwrp' do
           end
         end
 
-        context 'when authorized_keys value is invalid format' do
+        context 'when ssh_keys value is invalid format' do
           before(:each) do
-            chef_run.node.set['user_test']['authorized_keys'] = 'bob'
+            chef_run.node.set['user_test']['ssh_keys'] = 'bob'
             allow(Etc).to receive(:getpwnam).and_return(etc)
           end
 
-          it 'logs warn and skips key if authorized_keys_bag not set' do
+          it 'logs warn and skips key if ssh_keys_bag not set' do
             expect(Chef::Log).to receive(:warn)
-              .with(/authorized_keys_bag not specified/)
+              .with(/ssh_keys_bag not specified/)
             chef_run.converge(recipe)
             expect(chef_run)
               .not_to create_template('/home/tu/.ssh/authorized_keys')
           end
 
-          it 'logs warn and skips key if authorized_keys_bag not found' do
-            chef_run.node.set['user_test']['authorized_keys_bag'] = 'bagkeys'
+          it 'logs warn and skips key if ssh_keys_bag not found' do
+            chef_run.node.set['user_test']['ssh_keys_bag'] = 'bagkeys'
             allow(Chef::DataBag).to receive(:list)
               .and_return('notmykeybag' => {})
             expect(Chef::Log).to receive(:warn)
@@ -264,8 +264,8 @@ describe 'step into user_account lwrp' do
               '/home/tu/.ssh/authorized_keys')
           end
 
-          it 'gets item from authorized_keys_bag and adds key' do
-            chef_run.node.set['user_test']['authorized_keys_bag'] = 'bagkeys'
+          it 'gets item from ssh_keys_bag and adds key' do
+            chef_run.node.set['user_test']['ssh_keys_bag'] = 'bagkeys'
             allow(Chef::DataBag).to receive(:list)
               .and_return('bagkeys' => {})
             stub_data_bag('bagkeys').and_return('bob')

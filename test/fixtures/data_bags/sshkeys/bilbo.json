@@ -1,4 +1,4 @@
 {
     "id": "bilbo",
-    "authorized_keys": "ssh-rsa AAAAdatabagpublickey"
+    "ssh_keys": "ssh-rsa AAAAdatabagpublickey"
 }

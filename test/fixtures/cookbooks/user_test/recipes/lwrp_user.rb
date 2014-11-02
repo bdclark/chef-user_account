@@ -15,8 +15,8 @@ user_account 'test_user' do
   manage_home node['user_test']['manage_home'] unless node['user_test']['manage_home'].nil?
   shell node['user_test']['shell'] unless node['user_test']['shell'].nil?
   password node['user_test']['password'] unless node['user_test']['password'].nil?
-  authorized_keys node['user_test']['authorized_keys'] unless node['user_test']['authorized_keys'].nil?
-  authorized_keys_bag node['user_test']['authorized_keys_bag'] unless node['user_test']['authorized_keys_bag'].nil?
+  ssh_keys node['user_test']['ssh_keys'] unless node['user_test']['ssh_keys'].nil?
+  ssh_keys_bag node['user_test']['ssh_keys_bag'] unless node['user_test']['ssh_keys_bag'].nil?
   sudo node['user_test']['sudo'] unless node['user_test']['sudo'].nil?
   action node['user_test']['action'] unless node['user_test']['action'].nil?
   notifies :write, 'log[log]', :immediately
