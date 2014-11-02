@@ -98,7 +98,7 @@ def sudo_resource(user, exec_action)
   exec_action = :remove unless new_resource.sudo && exec_action == :install
   sudo user do
     user user
-    nopasswd true
+    nopasswd new_resource.sudo_nopasswd
     action exec_action
   end
 end

@@ -32,3 +32,4 @@ attribute :ssh_keys, kind_of: [Array, String]
 attribute :ssh_keys_bag, kind_of: String
 attribute :cookbook, kind_of: String, default: 'user_account'
 attribute :sudo, kind_of: [TrueClass, FalseClass], default: false
+attribute :sudo_nopasswd, kind_of: [TrueClass, FalseClass], default: true

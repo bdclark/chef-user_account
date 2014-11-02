@@ -49,6 +49,7 @@ describe 'step into user_account lwrp' do
       chef_run.node.set['user_test']['shell'] = '/bin/false'
       chef_run.node.set['user_test']['password'] = 'secret'
       chef_run.node.set['user_test']['sudo'] = true
+      chef_run.node.set['user_test']['sudo_nopasswd'] = false
       allow(Etc).to receive(:getpwnam).and_return(getpwnam)
       chef_run.converge(recipe)
     end
@@ -157,6 +158,7 @@ describe 'step into user_account lwrp' do
           chef_run.node.set['user_test']['ssh_keys'] =
             ['ssh-rsa AAAAmykey', 'ssh-rsa AAAAyourkey']
           chef_run.node.set['user_test']['sudo'] = true
+          chef_run.node.set['user_test']['sudo_nopasswd'] = false
           allow(Etc).to receive(:getpwnam).and_return(etc)
           allow(::File).to receive(:directory?)
             .with(anything).and_call_original
@@ -187,6 +189,9 @@ describe 'step into user_account lwrp' do
             chef_run.node.set['user_test']['sudo'] = false
             chef_run.converge(recipe)
             expect(chef_run).to remove_sudo('test_user')
+          end
+          it 'configures sudo nopasswd' do
+            expect(chef_run).to install_sudo('test_user').with(nopasswd: false)
           end
         end
 

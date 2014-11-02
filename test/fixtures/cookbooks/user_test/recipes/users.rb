@@ -39,6 +39,8 @@ user_account 'gandalf' do
   shell '/bin/false'
   password '$1$xz0FtiKR$cW9e22mUbM4Hg23q5pjFd/'
   ssh_keys 'ssh-rsa AAAAgandalfkey'
+  sudo true
+  sudo_nopasswd false
 end
 
 user_account 'root' do

@@ -60,6 +60,13 @@ describe user('gandalf') do
   it { should_not have_authorized_key 'ssh-rsa AAAAgandalfkey' }
 end
 
+describe file('/etc/sudoers.d/gandalf') do
+  it { should be_file }
+  its(:content) { should match(/gandalf ALL=\(ALL\) ALL/) }
+  it { should be_owned_by 'root' }
+  it { should be_mode 440 }
+end
+
 describe user('root') do
   it { should have_authorized_key 'ssh-ed25519 AAAAroots_authorized_key' }
 end

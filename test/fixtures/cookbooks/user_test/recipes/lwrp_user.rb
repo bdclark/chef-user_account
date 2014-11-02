@@ -18,6 +18,7 @@ user_account 'test_user' do
   ssh_keys node['user_test']['ssh_keys'] unless node['user_test']['ssh_keys'].nil?
   ssh_keys_bag node['user_test']['ssh_keys_bag'] unless node['user_test']['ssh_keys_bag'].nil?
   sudo node['user_test']['sudo'] unless node['user_test']['sudo'].nil?
+  sudo_nopasswd node['user_test']['sudo_nopasswd'] unless node['user_test']['sudo_nopasswd'].nil?
   action node['user_test']['action'] unless node['user_test']['action'].nil?
   notifies :write, 'log[log]', :immediately
 end
