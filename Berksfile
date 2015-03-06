@@ -1,4 +1,7 @@
 source 'https://api.berkshelf.com'
-metadata
 
-cookbook 'user_test', path: 'test/fixtures/cookbooks/user_test'
+group :integration do
+  cookbook 'user_test', path: 'test/fixtures/cookbooks/user_test'
+end
+
+metadata
