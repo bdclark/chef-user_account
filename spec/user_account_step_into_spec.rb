@@ -8,7 +8,7 @@ auth_key_bag = {
 
 describe 'step into user_account lwrp' do
   let(:chef_run) do
-    ChefSpec::Runner.new(step_into: ['user_account']).converge(recipe)
+    ChefSpec::SoloRunner.new(step_into: ['user_account']).converge(recipe)
   end
   let(:getpwnam) do
     double('pwnam', uid: 888, gid: 999, dir: '/home/test_user')
@@ -79,6 +79,9 @@ describe 'step into user_account lwrp' do
     end
     it 'assigns the specified password' do
       expect(chef_run).to create_user('test_user').with(password: 'secret')
+    end
+    it 'assigns specified sudo attributes' do
+      expect(chef_run).to install_sudo('test_user').with(nopasswd: false)
     end
 
     let(:etc_group) { double('group', gid: 888, name: 'mygroup') }
@@ -298,5 +301,4 @@ describe 'step into user_account lwrp' do
       end
     end
   end
-
 end

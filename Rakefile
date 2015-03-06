@@ -21,7 +21,7 @@ RSpec::Core::RakeTask.new(:spec) do |t|
   t.rspec_opts = '--format documentation --color'
 end
 
-desc 'Run all style checks and unit tests'
+desc 'Run style and unit tests'
 task default: %w(style spec)
 
 # Integration tests. Kitchen.ci
@@ -43,8 +43,8 @@ namespace :integration do
 
     if run_kitchen
       Kitchen.logger = Kitchen.default_file_logger
-      @loader = Kitchen::Loader::YAML
-        .new(project_config: './.kitchen.cloud.yml')
+      @loader =
+        Kitchen::Loader::YAML.new(project_config: './.kitchen.cloud.yml')
       config = Kitchen::Config.new(loader: @loader)
       config.instances.each do |instance|
         instance.test(:always)

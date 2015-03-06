@@ -11,7 +11,7 @@ AllCops:
 Style/SingleSpaceBeforeFirstArg:
   Enabled: false
 
-Style/MethodLength:
+Metrics/MethodLength:
   Max: 40
 
 # Style/HashSyntax:

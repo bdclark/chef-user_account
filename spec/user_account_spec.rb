@@ -4,7 +4,7 @@ recipe = 'user_test::lwrp_user'
 
 describe 'user_account lwrp' do
   let(:chef_run) do
-    ChefSpec::Runner.new.converge(recipe)
+    ChefSpec::SoloRunner.new.converge(recipe)
   end
 
   it 'performs action :create as default action' do
@@ -40,5 +40,4 @@ describe 'user_account lwrp' do
     chef_run.converge(recipe)
     expect(chef_run).to unlock_user_account('test_user')
   end
-
 end
