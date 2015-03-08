@@ -11,14 +11,13 @@ etc. and (currently) has zero functional recipes. Additional functionality is
 being considered; in the meantime that's what wrapper cookbooks are for (example forthcoming).
 
 The LWRP in this cookbook was heavily inspired by the [user](https://github.com/fnichol/chef-user)
-cookbook by @fnichol and the Opscode [users](https://github.com/sethvargo-cookbooks/users) cookbook
-currently maintained by @sethvargo.
+cookbook by @fnichol and the Opscode [users](https://github.com/sethvargo-cookbooks/users) cookbook.
 
 ## <a name='requirements'></a>  Requirements
 
 ### <a name="requirements-chef"></a> Chef
 
-Tested on 11.X, but should be pretty compatible (nothing fancy here).
+Tested with ChefDK 0.4.0.
 
 ### <a name="requirements-platform"></a> Platform
 
@@ -35,22 +34,26 @@ support more:
   sudo privileges)
 
 ## <a name='recipes'></a> Recipes
-### <a name='recipe-default'></a> default
-This recipe is a no-op and does nothing (and never will).
+TODO (no recipes yet).
 
 ## <a name='attributes'></a> Attributes
 
 #### home_root
+
 The default parent path of a user's home directory. Can be overridden by each
 resource.  Defaults to `/Users` for OSX, otherwise `/home`.
 
 #### manage_home
-Whether of not to manage the home directory of a user by default. Can be
-overridden by each resource. Default is `true`.
+Sets the default for the `manage_home` attribute of the `user_account` resource.
+Default is `true`.
+
+#### manage_ssh_files
+Sets the default for the `manage_ssh_files` attribute of the `user_account` resource.
+Default is `false`.
 
 ## <a name='lwrps'></a> Resources and Providers
 ### <a name='lwrp-ua'></a> user_account
-The `user_account` LWRP manages users, their SSH authorized_keys files, and
+This LWRP manages users, their SSH authorized_keys files, and
 per-user sudo privileges.
 
 ### <a name='lwrp-ua-actions'></a> Actions
@@ -66,20 +69,22 @@ Action    | Description
 
 ### <a name='lwrp-ua-attributes'></a> Attributes
 
-Attribute    | Description                                    | Default
--------------|------------------------------------------------|--------
-username     | **Name attribute**: username (required)        | `nil`
-comment      | comment passed to chef user resource           | `nil`
-uid          | uid passed to chef user resource               | `nil`
-gid          | gid passed to chef user resource (see below)   | `nil`
-home         | home directory passed to chef user resource    | `nil`
-manage_home  | whether to manage user's home directory        | `true`
-shell        | shell passed to chef user resource             | `nil`
-password     | password passed to chef user resource          | `nil`
-ssh_keys     | string/array of public SSH keys, and/or data bag item(s) to lookup | `nil`
-ssh_keys_bag | optional data bag name holding public SSH keys | `nil`
-cookbook     | source of template for authorized_keys file    | `user_account`
-sudo         | whether to enable user sudo in /etc/sudoers.d  | `false`
+Attribute     | Description                                    | Default
+--------------|------------------------------------------------|--------
+username      | **Name attribute**: username (required)        | `nil`
+comment       | comment passed to chef user resource           | `nil`
+uid           | uid passed to chef user resource               | `nil`
+gid           | gid passed to chef user resource (see below)   | `nil`
+home          | home directory passed to chef user resource    | `nil`
+manage_home   | whether to manage user's home directory        | `node['user_account']['manage_home']`
+shell         | shell passed to chef user resource             | `nil`
+password      | password passed to chef user resource          | `nil`
+ssh_keys      | string/array of public SSH keys, and/or data bag item(s) to lookup | `nil`
+ssh_keys_bag  | optional data bag name holding public SSH keys | `nil`
+manage_ssh_files | remove authorized_keys if no public keys included resource | `node['user_account']['manage_ssh_files']`
+cookbook      | source of template for authorized_keys file    | `user_account`
+sudo          | whether to enable user sudo in /etc/sudoers.d  | `false`
+sudo_nopasswd | whether to enable `nopasswd` when sudo enabled | `true`
 
 ### <a name='lwrp-ua-description'></a> Description
 If the `gid` attribute is set, the LWRP will create the group if it doesn't
