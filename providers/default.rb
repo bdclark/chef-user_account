@@ -27,7 +27,7 @@ end
 
 [:create, :modify, :manage, :lock, :unlock].each do |a|
   action a do
-    assert_user_exists(a) unless a == :create
+    assert_user_exists(a) unless [:create, :manage].include?(a)
     user_resource(a)
     sudo_resource(:install)
     ssh_file_resources

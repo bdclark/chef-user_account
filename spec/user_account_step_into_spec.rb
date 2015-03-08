@@ -153,12 +153,6 @@ shared_examples_for 'managing sudo' do
   end
 end
 
-# shared_examples_for 'removing sudo' do
-#   it 'removes sudo' do
-#     expect(chef_run).to remove_sudo('test_user')
-#   end
-# end
-
 shared_examples_for 'home directory' do
   let(:username) { 'test_user' }
   let(:user) { chef_run.find_resource(:user, username) }
@@ -420,7 +414,20 @@ describe 'step into user_account lwrp' do
     end
   end
 
-  [:modify, :manage, :lock, :unlock].each do |action|
+  describe ':manage' do
+    let(:action) { :manage }
+
+    it 'manages user' do
+      expect(chef_run).to manage_user('test_user')
+    end
+
+    it_behaves_like 'managing user resource'
+    it_behaves_like 'managing group'
+    it_behaves_like 'managing sudo'
+    # it_behaves_like 'managing ssh'
+  end
+
+  [:modify, :lock, :unlock].each do |action|
     describe ":#{action}" do
       let(:action) { action }
 
@@ -438,8 +445,6 @@ describe 'step into user_account lwrp' do
           case action
           when :modify
             expect(chef_run).to modify_user('test_user')
-          when :manage
-            expect(chef_run).to manage_user('test_user')
           when :lock
             expect(chef_run).to lock_user('test_user')
           when :unlock
@@ -454,44 +459,4 @@ describe 'step into user_account lwrp' do
       end
     end
   end
-
-  # [:create, :modify, :manage, :lock, :unlock, :remove].each do |action|
-  #   describe "action #{action}" do
-  #     let(:action) { action }
-
-  #     context 'with non-existing user' do
-  #       case action
-  #       when :create
-  #         it_behaves_like 'managing user resource', action
-  #         it_behaves_like 'home directory'
-  #         it_behaves_like 'managing group'
-  #         it_behaves_like 'managing sudo'
-  #         it_behaves_like 'managing ssh'
-  #       when :remove
-  #         it_behaves_like 'managing user resource', action
-  #         it_behaves_like 'removing sudo'
-  #       else # :modify, :manage, :lock, :unlock
-  #         it 'raises error' do
-  #           expect { chef_run }.to raise_error
-  #         end
-  #       end
-  #     end
-
-  #     context 'with pre-existing user' do
-  #       before do
-  #         allow(Etc).to receive(:getpwnam).and_return(getpwnam)
-  #       end
-
-  #       it_behaves_like 'managing user resource', action
-  #       case action
-  #       when :remove
-  #         it_behaves_like 'removing sudo'
-  #       else
-  #         it_behaves_like 'managing group'
-  #         it_behaves_like 'managing sudo'
-  #         it_behaves_like 'managing ssh'
-  #       end
-  #     end
-  #   end
-  # end
 end
