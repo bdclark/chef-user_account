@@ -25,112 +25,85 @@ def whyrun_supported?
   true
 end
 
-def load_current_resource
-  @username = new_resource.username
-end
-
-action :create do
-  user_resource(:create)
-  sudo_resource(@username, :install)
-  manage_ssh_files
-end
-
-action :modify do
-  assert_user_exists(:modify)
-  user_resource(:modify)
-  sudo_resource(@username, :install)
-  manage_ssh_files
-end
-
-action :manage do
-  if user_exists?
-    user_resource(:manage)
-    sudo_resource(@username, :install)
-    manage_ssh_files
-  else
-    msg = "user_account[#{@username}] unable to manage user - does not exist!"
-    Chef::Log.info(msg)
+[:create, :modify, :manage, :lock, :unlock].each do |a|
+  action a do
+    assert_user_exists(a) unless a == :create
+    user_resource(a)
+    sudo_resource(:install)
+    ssh_file_resources
   end
-end
-
-action :lock do
-  assert_user_exists(:lock)
-  user_resource(:lock)
-  sudo_resource(@username, :install)
-  manage_ssh_files
-end
-
-action :unlock do
-  assert_user_exists(:unlock)
-  user_resource(:unlock)
-  sudo_resource(@username, :install)
-  manage_ssh_files
 end
 
 action :remove do
   user_resource(:remove)
-  sudo_resource(@username, :remove)
+  sudo_resource(:remove)
 end
 
-private
-
 def user_resource(exec_action)
-  group_id = ensure_user_group if new_resource.gid && exec_action != :remove
-  home = home_directory
-  manage_home = if new_resource.manage_home.nil?
-                  node['user_account']['manage_home']
-                else
-                  new_resource.manage_home
-                end
-  user @username do
-    uid new_resource.uid if new_resource.uid
-    gid group_id if group_id
-    comment new_resource.comment if new_resource.comment
-    shell new_resource.shell if new_resource.shell
-    password new_resource.password if new_resource.password
-    supports manage_home: manage_home
-    home home
+  user new_resource.username do
+    uid new_resource.uid
+    gid ensure_user_group if new_resource.gid && exec_action != :remove
+    comment new_resource.comment
+    shell new_resource.shell
+    password new_resource.password
+    supports manage_home: if new_resource.manage_home.nil?
+                            node['user_account']['manage_home']
+                          else
+                            new_resource.manage_home
+                          end
+    home home_directory
     action :nothing
   end.run_action(exec_action)
 end
 
-def sudo_resource(user, exec_action)
+def sudo_resource(exec_action)
   exec_action = :remove unless new_resource.sudo && exec_action == :install
-  sudo user do
-    user user
+  sudo new_resource.username do
+    user new_resource.username
     nopasswd new_resource.sudo_nopasswd
     action exec_action
   end
 end
 
-def manage_ssh_files
+def user_group
+  Etc.getpwnam(new_resource.username).gid
+end
+
+def ssh_file_resources
+  keys = authorized_keys
   home = home_directory
-  if ::File.directory?(home)
-    user_group = Etc.getpwnam(@username).gid
-    ssh_directory(home, @username, user_group)
-    authorized_keys_file(home, @username, user_group)
-  elsif new_resource.ssh_keys && !new_resource.ssh_keys.empty?
-    msg = "user_account[#{@username}] unable to manage ssh files for user"
-    Chef::Log.warn(msg)
+  if keys
+    if ::File.directory?(home)
+      directory "#{home}/.ssh" do
+        owner new_resource.username
+        group user_group
+        mode '0700'
+      end
+
+      template "#{home}/.ssh/authorized_keys" do
+        source 'authorized_keys.erb'
+        cookbook new_resource.cookbook
+        owner new_resource.username
+        group user_group
+        mode '0600'
+        variables ssh_keys: keys
+      end
+    else
+      msg = "user_account[#{new_resource.username}] unable to manage ssh "\
+        "files for user, home directory '#{home}' does not exist"
+      Chef::Log.warn(msg) unless ::File.directory?(home)
+    end
+  elsif manage_ssh_files? == true
+    file "#{home}/.ssh/authorized_keys" do
+      action :delete
+      only_if { ::File.exist?("#{home}/.ssh/authorized_keys") }
+    end
   end
 end
 
-def authorized_keys_file(homedir, user, group)
-  keys = authorized_keys
-  if keys
-    template "#{homedir}/.ssh/authorized_keys" do
-      source 'authorized_keys.erb'
-      cookbook new_resource.cookbook
-      owner user
-      group group
-      mode '0600'
-      variables ssh_keys: keys
-    end
-  else
-    file "#{homedir}/.ssh/authorized_keys" do
-      action :delete
-    end
-  end
+def manage_ssh_files?
+  new_resource.manage_ssh_files unless new_resource.manage_ssh_files.nil?
+  node['user_account']['manage_ssh_files']
 end
 
 def authorized_keys
@@ -140,7 +113,7 @@ def authorized_keys
       keys << item
     else
       key_bag = new_resource.ssh_keys_bag
-      msg = "user_account[#{@username}] authorized_key '#{item}'"\
+      msg = "user_account[#{new_resource.username}] authorized_key '#{item}'"\
         ' not a valid public SSH key'
       if key_bag.nil?  || key_bag.empty?
         msg << ' and ssh_keys_bag not specified - skipping key'
@@ -158,15 +131,14 @@ def authorized_keys
           if valid_public_key?(key)
             keys << key
           else
-            msg = "user_account[#{@username}] value from data bag '#{key_bag}'"\
-              " with id '#{item}' not a valid public SSH key - skipping key"
-            Chef::Log.warn(msg)
+            Chef::Log.warn("user_account[#{new_resource.username}] "\
+              "value from data bag '#{key_bag}' item '#{item}' "\
+              'not a valid public SSH key - skipping key')
           end
         end
       else
-        msg = "user_account[#{@username}] unable to find ssh_keys from"\
-          " data bag '#{key_bag}' with id '#{item}' - skipping key"
-        Chef::Log.info(msg)
+        Chef::Log.warn("user_account[#{new_resource.username}] unable to find "\
+          "ssh_keys in data bag '#{key_bag}' item '#{item}' - skipping key")
       end
     end
   end
@@ -177,15 +149,6 @@ def valid_public_key?(key)
   key =~ /^(ssh-(dss|rsa|ed25519)|ecdsa-sha2-\w+) AAAA/ ? true : false
 end
 
-def ssh_directory(homedir, user, group)
-  return unless new_resource.ssh_keys
-  directory "#{homedir}/.ssh" do
-    owner user
-    group group
-    mode '0700'
-  end
-end
-
 # The user block will fail if the group does not yet exist.
 # See the -g option limitations in man 8 useradd for an explanation.
 # This should correct that without breaking functionality.
@@ -194,11 +157,12 @@ def ensure_user_group
     group_name = new_resource.gid
     Etc.getgrnam(new_resource.gid).gid
   else
-    group_name = @username
+    group_name = new_resource.username
     Etc.getgrgid(new_resource.gid).gid
   end
 rescue ArgumentError
-  Chef::Log.info("user_account[#{@username}] creating group #{group_name}")
+  Chef::Log.info(
+    "user_account[#{new_resource.username}] creating group #{group_name}")
   group group_name do
     gid new_resource.gid if new_resource.gid.is_a?(Integer)
   end.run_action(:create)
@@ -207,19 +171,13 @@ end
 
 def home_directory
   return new_resource.home if new_resource.home
-  # get /etc/passwd home if user exists
-  Etc.getpwnam(@username).dir
+  Etc.getpwnam(new_resource.username).dir
 rescue ArgumentError
-  return ::File.join(node['user_account']['home_root'], @username)
-end
-
-def user_exists?
-  true if Etc.getpwnam(@username)
-rescue ArgumentError
-  false
+  return ::File.join(node['user_account']['home_root'], new_resource.username)
 end
 
 def assert_user_exists(exec_action)
-  return true if user_exists?
-  fail "Cannot #{exec_action} user #{@username} - does not exist!"
+  true if Etc.getpwnam(new_resource.username)
+rescue ArgumentError
+  raise "Cannot #{exec_action} user #{new_resource.username} - does not exist!"
 end

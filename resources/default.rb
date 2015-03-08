@@ -25,7 +25,8 @@ attribute :comment, kind_of: String
 attribute :uid, kind_of: [String, Integer]
 attribute :gid, kind_of: [String, Integer]
 attribute :home, kind_of: String
-attribute :manage_home, kind_of: [TrueClass, FalseClass], default: nil
+attribute :manage_home, kind_of: [TrueClass, FalseClass]
+attribute :manage_ssh_files, kind_of: [TrueClass, FalseClass]
 attribute :shell, kind_of: String
 attribute :password, kind_of: String
 attribute :ssh_keys, kind_of: [Array, String]

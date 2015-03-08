@@ -9,6 +9,7 @@
 node.default['user_test']['uid'] = nil
 
 user_account 'test_user' do
+  username node['user_test']['username'] unless node['user_test']['username'].nil?
   uid node['user_test']['uid'] unless node['user_test']['uid'].nil?
   gid node['user_test']['gid'] unless node['user_test']['gid'].nil?
   home node['user_test']['home'] unless node['user_test']['home'].nil?
